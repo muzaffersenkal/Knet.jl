@@ -469,7 +469,7 @@ update!(x::Param, g) = update!(x.value, g, x.opt)
 
 using AutoGrad: full
 
-for T in (Array{Float32},Array{Float64},KnetArray{Float32},KnetArray{Float64}); @eval begin
+for T in (Array{Float32},Array{Float64},KnetArray{Float32},KnetArray{Float64},CuArray{Float32},CuArray{Float64}); @eval begin
 
     function update!(w::$T, g, p::SGD)
         gclip!(g, p.gclip)

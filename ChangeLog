@@ -1,3 +1,38 @@
+2020-04-17  EC2 Default User  <ec2-user@ip-172-31-31-102>
+
+	* dy/cuarrays: Testing CuArrays on the tutorial notebooks. On quickstart we have:
+
+	forward KnetArray:
+	julia> GC.gc(); for i in 1:10; @time (for (x,y) in ktst; kmodel(x,y); end); end
+	0.132157 seconds (41.88 k allocations: 31.927 MiB) # time reported is minimum of 10
+
+	forward CuArray:
+	julia> GC.gc(); for i in 1:10; @time (for (x,y) in ctst; cmodel(x,y); end); end
+	0.206272 seconds (185.98 k allocations: 37.288 MiB)
+
+	TODO: see which operation is holding CuArrays back.
+
+	forwback KnetArray:
+	julia> GC.gc(); for i in 1:10; @time (for (x,y) in ktst; @diff kmodel(x,y); end); end
+	0.405250 seconds (196.03 k allocations: 40.639 MiB)
+
+	forwback CuArray:
+	julia> GC.gc(); for i in 1:10; @time (for (x,y) in ctst; @diff cmodel(x,y); end); end
+	with GPUArrays.allowscalar(false): [7] addtoindex!(::CuArray{Float32,2,Nothing}, ::CuArray{Float32,1,Nothing}, ::Array{Int64,1}) at /home/ec2-user/.julia/packages/AutoGrad/FSgUc/src/addto.jl:108
+	with GPUArrays.allowscalar(true):
+	1.126645 seconds (571.30 k allocations: 55.050 MiB)
+
+	TODO: fix AutoGrad.sparse and addto! for CuArrays
+
+	train KnetArray:
+	julia> for i in 1:10; @time sgd!(kmodel, ktst); end
+	0.486435 seconds (262.32 k allocations: 42.517 MiB)
+
+	train CuArray: (with GPUArrays.allowscalar(true))
+	Takes inf time.
+
+	TODO: fix Knet.update! for CuArrays
+
 2020-01-04  dyuret  <dyuret@login02.kuacc.ku.edu.tr>
 
 	* issue#513: downloading artifacts: DataDeps.jl vs Artifacts.toml.
