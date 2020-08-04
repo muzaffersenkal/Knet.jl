@@ -3,7 +3,7 @@
 
 using SpecialFunctions
 import Base.Broadcast: broadcasted
-import NNlib: relu, selu, elu
+import NNlib: relu, selu, elu, softplus, mish
 
 function unary_op(f, j=f, o...)
     J=Symbol(j)
@@ -43,6 +43,7 @@ for (f,g,y,dx) in
      (:selu, :seluback, :(xi >= 0 ? T(λ01)*xi : T(λα01)*(exp(xi)-1)), :(yi >= 0 ? dyi * T(λ01) : dyi * (yi + T(λα01)))),
      (:elu,  :eluback,  :(xi >= 0 ? xi : exp(xi)-1), :(yi >= 0 ? dyi : dyi * (1+yi))),
      (:tanx, :tanhback, :(tanh(xi)), :(dyi*(one(T)-yi*yi))),
+     (:softplus, :softplusback, :(log(one(T)+exp(xi))), :(one(T)/(one(T)+exp(-yi)))),
      (:sigm, :sigmback, 
       # Numerically stable implementation from
       # http://timvieira.github.io/blog/post/2014/02/11/exp-normalize-trick
@@ -104,6 +105,16 @@ Reference: Self-Normalizing Neural Networks (https://arxiv.org/abs/1706.02515).
 """
 selu
 
+"""
+    softplus(x)
+Return `ln(1+exp(x))`.
+
+References: 
+* [Glorot, Bordes and Bengio, 2011](http://proceedings.mlr.press/v15/glorot11a). Deep Sparse Rectifier Neural Networks. AISTATS.
+"""
+softplus
+
+    
 # To avoid conflict with AutoGrad:
 import Base: tanh
 @primitive tanh(x::Array),dy,y     tanhback.(dy,y)
@@ -116,6 +127,7 @@ import Base: tanh
 @primitive sigmback(dy,y),ddx  ddx.*y.*(1 .- y)  ddx.*dy.*(1 .- 2 .* y)
 @primitive seluback(dy,y),ddx  ddx.*((y.>=0).*λ01.+(y.<0).*(y.+λα01))  ddx.*dy.*(y.<0)
 @primitive  eluback(dy,y),ddx  ddx.*((y.>=0).+(y.<0).*(y.+1))          ddx.*dy.*(y.<0)
+@primitive softplusback(dy,y),ddx  ddx.*(1 ./ (1 .+ exp(-y)))  ddx.*dy.*y.*(1 .- y)
 
 # Unary plus and minus
 import Base: +, -
