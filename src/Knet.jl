@@ -74,6 +74,7 @@ export		# ref:reference.md tut:tutorial
     progress!,	# ref, tut
     progress,	# ref, tut
     relu,	# ref, tut
+    softplus,
     rmsprop!,	# ref
     Rmsprop,	# ref
     rmsprop,	# ref
